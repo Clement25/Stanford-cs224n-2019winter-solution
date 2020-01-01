@@ -59,7 +59,6 @@ def sgd(f, x0, step, iterations, postprocessing=None, useSaved=False,
     Return:
     x -- the parameter value after SGD finishes
     """
-
     # Anneal learning rate every several iterations
     ANNEAL_EVERY = 20000
 
@@ -68,7 +67,6 @@ def sgd(f, x0, step, iterations, postprocessing=None, useSaved=False,
         if start_iter > 0:
             x0 = oldx
             step *= 0.5 ** (start_iter / ANNEAL_EVERY)
-
         if state:
             random.setstate(state)
     else:
@@ -83,10 +81,10 @@ def sgd(f, x0, step, iterations, postprocessing=None, useSaved=False,
 
     for iter in range(start_iter + 1, iterations + 1):
         # You might want to print the progress every few iterations.
-
         loss = None
         ### YOUR CODE HERE
-
+        loss, gradient = f(x)
+        x -= step * gradient
         ### END YOUR CODE
 
         x = postprocessing(x)
