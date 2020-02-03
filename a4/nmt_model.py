@@ -72,7 +72,7 @@ class NMT(nn.Module):
         ###     Dropout Layer:
         ###         https://pytorch.org/docs/stable/nn.html#torch.nn.Dropout
         self.encoder = nn.LSTM(input_size=embed_size, hidden_size=hidden_size, bias=True, bidirectional=True)
-        self.decoder = nn.LSTM(input_size=hidden_size+embed_size, hidden_size=hidden_size, bias=True, bidirectional=False)
+        self.decoder = nn.LSTMCell(input_size=hidden_size+embed_size, hidden_size=hidden_size, bias=True)
         self.h_projection = nn.Linear(in_features=2*hidden_size, out_features=hidden_size, bias=False)
         self.c_projection = nn.Linear(in_features=2*hidden_size, out_features=hidden_size, bias=False)
         self.att_projection = nn.Linear(in_features=2*hidden_size, out_features=hidden_size, bias=False)
@@ -305,9 +305,8 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/torch.html#torch.unsqueeze
         ###     Tensor Squeeze:
         ###         https://pytorch.org/docs/stable/torch.html#torch.squeeze
-        pre_hidden, pre_cell = dec_state[0].unsqueeze(0),dec_state[1].unsqueeze(0)
-        _, dec_state = self.decoder(Ybar_t.unsqueeze(0), (pre_hidden, pre_cell))
-        dec_hidden, dec_cell = dec_state[0].squeeze(0), dec_state[1].squeeze(0)
+        dec_state = self.decoder(Ybar_t, (pre_hidden, pre_cell))
+        dec_hidden, dec_cell = dec_state[0], dec_state[1]
         e_t = torch.squeeze(torch.bmm(enc_hiddens_proj, torch.unsqueeze(dec_hidden,-1)), -1)
 
         ### END YOUR CODE

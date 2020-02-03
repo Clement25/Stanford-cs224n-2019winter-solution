@@ -34,5 +34,7 @@ def pad_sents(sents, pad_token):
 # b,c = encoder(a)
 # print(b)
 # print(c)
-a = torch.LongTensor(2,3)
-print(a)
+a = [2, 3]
+b = a
+a[0] += 1
+print(a,b)
