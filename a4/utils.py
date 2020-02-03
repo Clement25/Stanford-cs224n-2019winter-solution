@@ -29,13 +29,13 @@ def pad_sents(sents, pad_token):
     sents_padded = []
 
     ### YOUR CODE HERE (~6 Lines)
-
+    max_len = len(max(sents, key=len))
+    for sent in sents:
+        pad_len = max_len - len(sent)
+        sents_padded.append(sent+[pad_token]*pad_len)
 
     ### END YOUR CODE
-
     return sents_padded
-
-
 
 def read_corpus(file_path, source):
     """ Read file, where each sentence is dilineated by a `\n`.

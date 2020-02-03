@@ -51,7 +51,6 @@ class NMT(nn.Module):
         self.target_vocab_projection = None
         self.dropout = None
 
-
         ### YOUR CODE HERE (~8 Lines)
         ### TODO - Initialize the following variables:
         ###     self.encoder (Bidirectional LSTM with bias)
@@ -72,10 +71,15 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/nn.html#torch.nn.Linear
         ###     Dropout Layer:
         ###         https://pytorch.org/docs/stable/nn.html#torch.nn.Dropout
-
-
+        self.encoder = nn.LSTM(input_size=embed_size, hidden_size=hidden_size, bias=True, bidirectional=True)
+        self.decoder = nn.LSTM(input_size=hidden_size+embed_size, hidden_size=hidden_size, bias=True, bidirectional=False)
+        self.h_projection = nn.Linear(in_features=2*hidden_size, out_features=hidden_size, bias=False)
+        self.c_projection = nn.Linear(in_features=2*hidden_size, out_features=hidden_size, bias=False)
+        self.att_projection = nn.Linear(in_features=2*hidden_size, out_features=hidden_size, bias=False)
+        self.combined_output_projection = nn.Linear(in_features=3*hidden_size, out_features=hidden_size, bias=False)
+        self.target_vocab_projection = nn.Linear(in_features=hidden_size, out_features=len(vocab.tgt), bias=False)
+        self.dropout = nn.Dropout(p=dropout_rate)
         ### END YOUR CODE
-
 
     def forward(self, source: List[List[str]], target: List[List[str]]) -> torch.Tensor:
         """ Take a mini-batch of source and target sentences, compute the log-likelihood of
@@ -139,7 +143,7 @@ class NMT(nn.Module):
         ###     2. Compute `enc_hiddens`, `last_hidden`, `last_cell` by applying the encoder to `X`.
         ###         - Before you can apply the encoder, you need to apply the `pack_padded_sequence` function to X.
         ###         - After you apply the encoder, you need to apply the `pad_packed_sequence` function to enc_hiddens.
-        ###         - Note that the shape of the tensor returned by the encoder is (src_len b, h*2) and we want to
+        ###         - Note that the shape of the tensor returned by the encoder is (src_len, b, h*2) and we want to
         ###           return a tensor of shape (b, src_len, h*2) as `enc_hiddens`.
         ###     3. Compute `dec_init_state` = (init_decoder_hidden, init_decoder_cell):
         ###         - `init_decoder_hidden`:
@@ -162,12 +166,16 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/torch.html#torch.cat
         ###     Tensor Permute:
         ###         https://pytorch.org/docs/stable/tensors.html#torch.Tensor.permute
-
-
+        X = self.model_embeddings.source(source_padded)
+        X = pack_padded_sequence(X, lengths=source_lengths)
+        enc_hiddens, (last_hidden, last_cell) = self.encoder(X)
+        enc_hiddens = pad_packed_sequence(enc_hiddens)[0].permute(1,0,2)
+        init_decoder_hidden = self.h_projection(torch.cat((last_hidden[0],last_hidden[1]), 1))
+        init_decoder_cell = self.c_projection(torch.cat((last_cell[0], last_cell[1]), 1))
+        dec_init_state = (init_decoder_hidden, init_decoder_cell)
         ### END YOUR CODE
 
         return enc_hiddens, dec_init_state
-
 
     def decode(self, enc_hiddens: torch.Tensor, enc_masks: torch.Tensor,
                 dec_init_state: Tuple[torch.Tensor, torch.Tensor], target_padded: torch.Tensor) -> torch.Tensor:
@@ -235,9 +243,17 @@ class NMT(nn.Module):
 
 
         ### END YOUR CODE
-
+        enc_hiddens_proj = self.att_projection(enc_hiddens)
+        Y = self.model_embeddings.target(target_padded)
+        for Y_t in torch.split(Y, 1, dim=0):
+            Y_t = torch.squeeze(Y_t, dim=0)
+            Ybar_t = torch.cat((Y_t, o_prev), dim=1)
+            dec_state, o_t, _ = self.step(Ybar_t, dec_state, enc_hiddens, enc_hiddens_proj, enc_masks)
+            # h_t, c_t = dec_state
+            combined_outputs.append(o_t)
+            o_prev = o_t
+        combined_outputs = torch.stack(combined_outputs)
         return combined_outputs
-
 
     def step(self, Ybar_t: torch.Tensor,
             dec_state: Tuple[torch.Tensor, torch.Tensor],
@@ -265,7 +281,6 @@ class NMT(nn.Module):
                                       We are simply returning this value so that we can sanity check
                                       your implementation.
         """
-
         combined_output = None
 
         ### YOUR CODE HERE (~3 Lines)
@@ -290,10 +305,12 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/torch.html#torch.unsqueeze
         ###     Tensor Squeeze:
         ###         https://pytorch.org/docs/stable/torch.html#torch.squeeze
-
+        pre_hidden, pre_cell = dec_state[0].unsqueeze(0),dec_state[1].unsqueeze(0)
+        _, dec_state = self.decoder(Ybar_t.unsqueeze(0), (pre_hidden, pre_cell))
+        dec_hidden, dec_cell = dec_state[0].squeeze(0), dec_state[1].squeeze(0)
+        e_t = torch.squeeze(torch.bmm(enc_hiddens_proj, torch.unsqueeze(dec_hidden,-1)), -1)
 
         ### END YOUR CODE
-
         # Set e_t to -inf where enc_masks has 1
         if enc_masks is not None:
             e_t.data.masked_fill_(enc_masks.byte(), -float('inf'))
@@ -325,8 +342,11 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/torch.html#torch.cat
         ###     Tanh:
         ###         https://pytorch.org/docs/stable/torch.html#torch.tanh
-
-
+        alpha_t = F.softmax(e_t, dim=1)
+        a_t = torch.bmm(alpha_t.view(alpha_t.size()[0], 1, -1), enc_hiddens).squeeze(1)
+        U_t = torch.cat((a_t, dec_hidden), 1)
+        V_t = self.combined_output_projection(U_t)
+        O_t = self.dropout(torch.tanh(V_t))
         ### END YOUR CODE
 
         combined_output = O_t
@@ -346,7 +366,6 @@ class NMT(nn.Module):
         for e_id, src_len in enumerate(source_lengths):
             enc_masks[e_id, src_len:] = 1
         return enc_masks.to(self.device)
-
 
     def beam_search(self, src_sent: List[str], beam_size: int=5, max_decoding_time_step: int=70) -> List[Hypothesis]:
         """ Given a single source sentence, perform beam search, yielding translations in the target language.
