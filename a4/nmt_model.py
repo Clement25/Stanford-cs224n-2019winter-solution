@@ -305,14 +305,14 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/torch.html#torch.unsqueeze
         ###     Tensor Squeeze:
         ###         https://pytorch.org/docs/stable/torch.html#torch.squeeze
-        dec_state = self.decoder(Ybar_t, (pre_hidden, pre_cell))
+        dec_state = self.decoder(Ybar_t, dec_state)
         dec_hidden, dec_cell = dec_state[0], dec_state[1]
         e_t = torch.squeeze(torch.bmm(enc_hiddens_proj, torch.unsqueeze(dec_hidden,-1)), -1)
 
         ### END YOUR CODE
         # Set e_t to -inf where enc_masks has 1
         if enc_masks is not None:
-            e_t.data.masked_fill_(enc_masks.byte(), -float('inf'))
+            e_t.data.masked_fill_(enc_masks.bool(), -float('inf'))
 
         ### YOUR CODE HERE (~6 Lines)
         ### TODO:
