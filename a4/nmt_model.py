@@ -82,7 +82,7 @@ class NMT(nn.Module):
         ### END YOUR CODE
 
     def forward(self, source: List[List[str]], target: List[List[str]]) -> torch.Tensor:
-        """ Take a mini-batch of source and target sentences, compute the log-likelihood of
+        """Take a mini-batch of source and target sentences, compute the log-likelihood of
         target sentences under the language models learned by the NMT system.
 
         @param source (List[List[str]]): list of source sentence tokens
@@ -92,6 +92,7 @@ class NMT(nn.Module):
                                     log-likelihood of generating the gold-standard target sentence for
                                     each example in the input batch. Here b = batch size.
         """
+
         # Compute sentence lengths
         source_lengths = [len(s) for s in source]
 

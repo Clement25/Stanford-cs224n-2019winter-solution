@@ -40,10 +40,22 @@ def pad_sents_char(sents, char_pad_token):
     ###
     ###     You should NOT use the method `pad_sents()` below because of the way it handles
     ###     padding and unknown words.
+    max_sentence_length = max([len(sent) for sent in sents])
 
+    sents_padded = []
+    for sent in sents:
+        sent_padded = []
+        for word in sent:
+            if len(word) > max_word_length:
+                word = word[:max_word_length]
+            else:
+                word += [char_pad_token]*(max_word_length-len(word))
+            sent_padded.append(word)
+        if len(sent) < max_sentence_length:
+            sent_padded += [[0]*max_word_length for _ in range(max_sentence_length-len(sent))]
+        sents_padded.append(sent_padded)
 
     ### END YOUR CODE
-
     return sents_padded
 
 
@@ -60,13 +72,12 @@ def pad_sents(sents, pad_token):
     sents_padded = []
 
     ### COPY OVER YOUR CODE FROM ASSIGNMENT 4
-
-
+    max_len = len(max(sents, key=len))
+    for sent in sents:
+        pad_len = max_len - len(sent)
+        sents_padded.append(sent+[pad_token]*pad_len)
     ### END YOUR CODE FROM ASSIGNMENT 4
-
     return sents_padded
-
-
 
 def read_corpus(file_path, source):
     """ Read file, where each sentence is dilineated by a `\n`.
