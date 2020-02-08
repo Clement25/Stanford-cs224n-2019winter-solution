@@ -172,7 +172,7 @@ class VocabEntry(object):
         ###     previous parts
         word_ids = self.words2charindices(sents)
         sents_padded = pad_sents_char(word_ids,self.char2id['<pad>'])
-        sents_var = torch.tensor(sents_padded).permute(1,0,2)
+        sents_var = torch.tensor(sents_padded,device=device).permute(1,0,2)
         return sents_var
         ### END YOUR CODE
 
