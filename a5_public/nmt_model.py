@@ -146,7 +146,6 @@ class NMT(nn.Module):
         ### COPY OVER YOUR CODE FROM ASSIGNMENT 4
         ### Except replace "self.model_embeddings.source" with "self.model_embeddings_source"
         X = self.model_embeddings_source(source_padded)
-        print(X.device)
         X = pack_padded_sequence(X, lengths=source_lengths)
         enc_hiddens, (last_hidden, last_cell) = self.encoder(X)
         enc_hiddens = pad_packed_sequence(enc_hiddens)[0].permute(1,0,2)
