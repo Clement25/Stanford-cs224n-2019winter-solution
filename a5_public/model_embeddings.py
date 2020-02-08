@@ -64,9 +64,8 @@ class ModelEmbeddings(nn.Module):
         ## End A4 code
 
         ### YOUR CODE HERE for part 1j
-        output = torch.zeros(input.size(0),input.size(1),self.embed_size,device=input.device)
+        output = torch.zeros(input.size(0),input.size(1),self.embed_size)
         for i,sent in enumerate(input):
-            print("Device:{}".format(sent.device))
             x = self.char_embeddings(sent).permute(0,2,1)  # (batch_size, char_embed_size, max_word_length)
             x = self.cnn(x)                 # (batch_size, embed_size)    
             x = self.highway(x)             # (batch_size, embed_size)
