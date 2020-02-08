@@ -76,6 +76,7 @@ class NMT(nn.Module):
         """
         # Compute sentence lengths
         source_lengths = [len(s) for s in source]
+        print(self.device)
 
         # Convert list of lists into tensors
         ## A4 code
