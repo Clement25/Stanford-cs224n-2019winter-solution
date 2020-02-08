@@ -387,11 +387,6 @@ class NMT(nn.Module):
         completed_hypotheses.sort(key=lambda hyp: hyp.score, reverse=True)
         return completed_hypotheses
 
-    # @property
-    # def device(self) -> torch.device:
-    #     """ Determine which device to place the Tensors upon, CPU or GPU.
-    #     """
-    #     return self.att_projection.weight.device
 
     @staticmethod
     def load(model_path: str, no_char_decoder=False):
