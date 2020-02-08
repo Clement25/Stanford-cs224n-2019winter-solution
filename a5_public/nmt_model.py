@@ -100,7 +100,6 @@ class NMT(nn.Module):
         ###     - Modify calls to encode() and decode() to use the character level encodings
         source_padded_chars = self.vocab.src.to_input_tensor_char(source, device=self.device)   # Tensor: (max_sentence_length, batch_size, max_word_length) 
         target_padded_chars = self.vocab.tgt.to_input_tensor_char(target, device=self.device)   # Tensor: (max_sentence_length, batch_size, max_word_length)
-        print(self.device, source_padded_chars.device)
 
         enc_hiddens, dec_init_state = self.encode(source_padded_chars,source_lengths)
         enc_masks = self.generate_sent_masks(enc_hiddens, source_lengths)
@@ -148,6 +147,7 @@ class NMT(nn.Module):
         ### COPY OVER YOUR CODE FROM ASSIGNMENT 4
         ### Except replace "self.model_embeddings.source" with "self.model_embeddings_source"
         X = self.model_embeddings_source(source_padded)
+        print(X.device)
         X = pack_padded_sequence(X, lengths=source_lengths)
         enc_hiddens, (last_hidden, last_cell) = self.encoder(X)
         enc_hiddens = pad_packed_sequence(enc_hiddens)[0].permute(1,0,2)
