@@ -83,6 +83,8 @@ class NMT(nn.Module):
         source_padded = self.vocab.src.to_input_tensor(source, device=self.device)   # Tensor: (src_len, b)
         target_padded = self.vocab.tgt.to_input_tensor(target, device=self.device)   # Tensor: (tgt_len, b)
 
+        print(source_padded.device)
+
         # enc_hiddens, dec_init_state = self.encode(source_padded, source_lengths)
         # enc_masks = self.generate_sent_masks(enc_hiddens, source_lengths)
         # combined_outputs = self.decode(enc_hiddens, enc_masks, dec_init_state, target_padded)
