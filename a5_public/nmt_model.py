@@ -47,6 +47,7 @@ class NMT(nn.Module):
         self.dropout_rate = dropout_rate
         self.vocab = vocab
         self.device = device
+        print(self.device)
 
         ### COPY OVER YOUR CODE FROM ASSIGNMENT 4
         self.encoder = nn.LSTM(input_size=embed_size, hidden_size=hidden_size, bias=True, bidirectional=True)
