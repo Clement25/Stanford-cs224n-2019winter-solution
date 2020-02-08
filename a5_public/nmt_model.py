@@ -29,7 +29,7 @@ class NMT(nn.Module):
         - Unidirection LSTM Decoder
         - Global Attention Model (Luong, et al. 2015)
     """
-    def __init__(self, embed_size, hidden_size, vocab, device, dropout_rate=0.2, no_char_decoder=False):
+    def __init__(self, embed_size, hidden_size, vocab, dropout_rate=0.2, no_char_decoder=False):
         """ Init NMT Model.
 
         @param embed_size (int): Embedding size (dimensionality)
@@ -46,8 +46,6 @@ class NMT(nn.Module):
         self.hidden_size = hidden_size
         self.dropout_rate = dropout_rate
         self.vocab = vocab
-        self.device = device
-        print(self.device)
 
         ### COPY OVER YOUR CODE FROM ASSIGNMENT 4
         self.encoder = nn.LSTM(input_size=embed_size, hidden_size=hidden_size, bias=True, bidirectional=True)
@@ -99,7 +97,6 @@ class NMT(nn.Module):
         ###     - Modify calls to encode() and decode() to use the character level encodings
         source_padded_chars = self.vocab.src.to_input_tensor_char(source, device=self.device)   # Tensor: (max_sentence_length, batch_size, max_word_length) 
         target_padded_chars = self.vocab.tgt.to_input_tensor_char(target, device=self.device)   # Tensor: (max_sentence_length, batch_size, max_word_length)
-        print(source_padded_chars.device)
 
         enc_hiddens, dec_init_state = self.encode(source_padded_chars,source_lengths)
         enc_masks = self.generate_sent_masks(enc_hiddens, source_lengths)
@@ -387,6 +384,11 @@ class NMT(nn.Module):
         completed_hypotheses.sort(key=lambda hyp: hyp.score, reverse=True)
         return completed_hypotheses
 
+    @property
+    def device(self) -> torch.device:
+        """ Determine which device to place the Tensors upon, CPU or GPU.
+        """
+        return self.att_projection.weight.device
 
     @staticmethod
     def load(model_path: str, no_char_decoder=False):
