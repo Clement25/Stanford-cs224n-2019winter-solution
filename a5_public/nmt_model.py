@@ -98,7 +98,6 @@ class NMT(nn.Module):
         source_padded_chars = self.vocab.src.to_input_tensor_char(source, device=self.device)   # Tensor: (max_sentence_length, batch_size, max_word_length) 
         target_padded_chars = self.vocab.tgt.to_input_tensor_char(target, device=self.device)   # Tensor: (max_sentence_length, batch_size, max_word_length)
 
-        print("Device:%s"%source_padded_chars.device)
         enc_hiddens, dec_init_state = self.encode(source_padded_chars,source_lengths)
         enc_masks = self.generate_sent_masks(enc_hiddens, source_lengths)
         combined_outputs = self.decode(enc_hiddens, enc_masks, dec_init_state, target_padded_chars)
