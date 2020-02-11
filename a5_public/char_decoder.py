@@ -101,7 +101,6 @@ class CharDecoder(nn.Module):
                 output_words[j] += self.target_vocab.id2char[top_i[j].item()]
                 cur_char[0][j] = top_i[j].item()
         
-        # print(output_words)
         output_trunced = []
         for word in output_words:
             trunc_ind = word.find('}')
