@@ -16,4 +16,4 @@ If you have any questions, feel free to contact me through <henryhan88888@gmail.
 + PyTorch 1.0.0 (推荐) or 1.4.0 (当前最新版，经过测试可用)
 
 ## 联系方式
-如果您有任何针对repo中的问题，欢迎通过我的邮箱与我联系 <henryhan88888@gmail.com>
+如果您有任何问题，欢迎通过我的邮箱与我沟通联系 <henryhan88888@gmail.com>
