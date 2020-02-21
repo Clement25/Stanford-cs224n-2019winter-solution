@@ -27,7 +27,7 @@ class NMT(nn.Module):
     """ Simple Neural Machine Translation Model:
         - Bidrectional LSTM Encoder
         - Unidirection LSTM Decoder
-        - Global Attention Model (Luong, et al. 2015)
+        - Global Attention Mfmodel (Luong, et al. 2015)
     """
     def __init__(self, embed_size, hidden_size, vocab, dropout_rate=0.2, no_char_decoder=False):
         """ Init NMT Model.
@@ -63,7 +63,7 @@ class NMT(nn.Module):
         else:
            self.charDecoder = None
 
-    def forward(self, source: List[List[str]], target: List[List[str]]) -> torch.Tensor:
+    def forward(self, source: List[List[str]], target: List[List[str]]):
         """ Take a mini-batch of source and target sentences, compute the log-likelihood of
         target sentences under the language models learned by the NMT system.
 
@@ -128,7 +128,7 @@ class NMT(nn.Module):
         return scores
 
 
-    def encode(self, source_padded: torch.Tensor, source_lengths: List[int]) -> Tuple[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    def encode(self, source_padded: torch.Tensor, source_lengths: List[int]):
         """ Apply the encoder to source sentences to obtain encoder hidden states.
             Additionally, take the final states of the encoder and project them to obtain initial states for decoder.
         @param source_padded (Tensor): Tensor of padded source sentences with shape (src_len, b, max_word_length), where
@@ -158,7 +158,7 @@ class NMT(nn.Module):
 
 
     def decode(self, enc_hiddens: torch.Tensor, enc_masks: torch.Tensor,
-                dec_init_state: Tuple[torch.Tensor, torch.Tensor], target_padded: torch.Tensor) -> torch.Tensor:
+                dec_init_state: Tuple[torch.Tensor, torch.Tensor], target_padded: torch.Tensor):
         """Compute combined output vectors for a batch.
         @param enc_hiddens (Tensor): Hidden states (b, src_len, h*2), where
                                      b = batch size, src_len = maximum source sentence length, h = hidden size.
@@ -204,7 +204,7 @@ class NMT(nn.Module):
             dec_state: Tuple[torch.Tensor, torch.Tensor],
             enc_hiddens: torch.Tensor,
             enc_hiddens_proj: torch.Tensor,
-            enc_masks: torch.Tensor) -> Tuple[Tuple, torch.Tensor, torch.Tensor]:
+            enc_masks: torch.Tensor):
         """ Compute one forward step of the LSTM decoder, including the attention computation.
         @param Ybar_t (Tensor): Concatenated Tensor of [Y_t o_prev], with shape (b, e + h). The input for the decoder,
                                 where b = batch size, e = embedding size, h = hidden size.
@@ -231,9 +231,7 @@ class NMT(nn.Module):
         dec_state = self.decoder(Ybar_t, dec_state)
         dec_hidden, dec_cell = dec_state[0], dec_state[1]
         e_t = torch.squeeze(torch.bmm(enc_hiddens_proj, torch.unsqueeze(dec_hidden,-1)), -1)
-
         ### END YOUR CODE FROM ASSIGNMENT 4
-
 
         # Set e_t to -inf where enc_masks has 1
         if enc_masks is not None:
@@ -248,11 +246,10 @@ class NMT(nn.Module):
 
         ### END YOUR CODE FROM ASSIGNMENT 4
         
-
         combined_output = O_t
         return dec_state, combined_output, e_t
 
-    def generate_sent_masks(self, enc_hiddens: torch.Tensor, source_lengths: List[int]) -> torch.Tensor:
+    def generate_sent_masks(self, enc_hiddens: torch.Tensor, source_lengths: List[int]):
         """ Generate sentence masks for encoder hidden states.
 
         @param enc_hiddens (Tensor): encodings of shape (b, src_len, 2*h), where b = batch size,
@@ -268,7 +265,7 @@ class NMT(nn.Module):
         return enc_masks.to(self.device)
 
 
-    def beam_search(self, src_sent: List[str], beam_size: int=5, max_decoding_time_step: int=70) -> List[Hypothesis]:
+    def beam_search(self, src_sent: List[str], beam_size: int=5, max_decoding_time_step: int=70):
         """ Given a single source sentence, perform beam search, yielding translations in the target language.
         @param src_sent (List[str]): a single source sentence (words)
         @param beam_size (int): beam size
@@ -386,7 +383,7 @@ class NMT(nn.Module):
         return completed_hypotheses
 
     @property
-    def device(self) -> torch.device:
+    def device(self):
         """ Determine which device to place the Tensors upon, CPU or GPU.
         """
         return self.att_projection.weight.device
