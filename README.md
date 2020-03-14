@@ -6,7 +6,7 @@ My own implementation code for Stanford NLP course. For more information and lat
 + PyTorch 1.0.0 (recommend) or 1.4.0 (latest)
 
 ## Contact
-If you have any questions, feel free to contact me through <henryhan88888@gmail.com>
+feel free to contach me via <henryhan88888@gmail.com> should you have any questions.
 
 # 斯坦福大学 CS224N 自然语言处理 2019 冬学期课程
 本仓库包括了CS224n课程的所有问题解答和代码实现，CS224n的课程主页请访问[这里](http://web.stanford.edu/class/cs224n/).
